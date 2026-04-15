@@ -77,37 +77,6 @@ Mira addresses these challenges through **agentic automation**:
 
 ---
 
-## Business Impact
-
-- Reduces manual effort in project planning  
-- Standardizes project documentation  
-- Improves visibility into risks and blockers  
-- Automates stakeholder communication  
-- Saves time for TPMs and engineering teams  
-
----
-
-## Repository Structure
-
-mira-ai-tpm-agents/
-│
-├── workflows/
-│ ├── mira-project-planning-agent.json
-│ └── mira-kanban-summariser-agent.json
-│
-├── docs/
-│ ├── problem-statement.pdf
-│ └── screenshots/
-│
-├── samples/
-│ ├── sample-project-plan-output.md
-│ └── sample-weekly-status-email.md
-│
-└── README.md
-
-
----
-
 ## Getting Started
 
 ### Prerequisites
@@ -160,32 +129,6 @@ Before running:
 - Connect APIs (Google, Trello, OpenAI, Gmail)  
 
 No sensitive data is included in this repository.
-
----
-
-## Sample Outputs
-
-### Project Plan
-- Executive summary  
-- Scope, milestones, risks  
-- Stakeholder and governance details  
-
-### Weekly Status Email
-- Progress snapshot  
-- Completed tasks  
-- Blockers and risks  
-- Upcoming priorities  
-- PM recommendations  
-
----
-
-## Future Improvements
-
-- RAG-based project context retrieval  
-- Risk scoring and dependency mapping  
-- Slack/Teams integration for reports  
-- Dashboard for project health metrics  
-- Multi-project scaling  
 
 ---
 
