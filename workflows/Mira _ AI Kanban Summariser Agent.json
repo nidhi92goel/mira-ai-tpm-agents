@@ -1,0 +1,263 @@
+{
+  "name": "Mira : AI Kanban Summariser Agent",
+  "nodes": [
+    {
+        "parameters": {
+            "model": {
+                "__rl": true,
+                "mode": "list",
+                "value": "gpt-4.1-mini"
+            },
+            "builtInTools": {},
+            "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+            768,
+            208
+        ],
+        "id": "de06c43b-e276-416b-9913-8c602c4ab6a2",
+        "name": "OpenAI Chat Model",
+        "credentials": {}
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "ad23d9b5-159f-42cf-b334-64d9f27323fa",
+      "name": "Weekly Workflow Trigger"
+    },
+    {
+        "parameters": {
+            "resource": "list",
+            "operation": "getAll",
+            "id": "YOUR_TRELLO_BOARD_ID",
+            "returnAll": true,
+            "additionalFields": {}
+        },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        48,
+        0
+      ],
+      "id": "da2acb7b-3b26-4962-a74e-41f325aaf356",
+      "name": "Fetch Trello Board Lists",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "resource": "list",
+        "operation": "getCards",
+        "id": "={{ $json.id }}",
+        "returnAll": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "003f3ef4-3ac2-4af7-ae1f-6544f8322b9c",
+      "name": "Fetch Trello Cards from Lists",
+      "credentials": {}
+    },
+    {
+        "parameters": {
+            "jsCode": "const listMap = {\n  \"LIST_ID_DONE\": \"Done\",\n  \"LIST_ID_BACKLOG\": \"Backlog\",\n  \"LIST_ID_IN_PROGRESS\": \"In Progress\",\n  \"LIST_ID_BLOCKED\": \"Blocked / Risk Watch\"\n};\n\nreturn items.map(item => {\n  const card = item.json;\n\n  return {\n    json: {\n      taskName: card.name || \"\",\n      description: card.desc || \"No description provided\",\n      dueDate: card.due || null,\n      status: listMap[card.idList] || \"Unknown\",\n      completed: card.dueComplete || false,\n      label: card.labels && card.labels.length > 0 ? card.labels[0].name : \"No Label\",\n      shortUrl: card.shortUrl || \"\"\n    }\n  };\n});"
+        },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        0
+      ],
+      "id": "b227a51d-79e2-4e18-b0b1-ffaf20aaa0cb",
+      "name": "Transform Trello Cards → Task Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const grouped = {\n  Done: [],\n  \"In Progress\": [],\n  \"Blocked / Risk Watch\": [],\n  Backlog: []\n};\n\nfor (const item of items) {\n  const task = item.json;\n  if (grouped[task.status]) {\n    grouped[task.status].push(task);\n  }\n}\n\nreturn [\n  {\n    json: {\n      totalTasks: items.length,\n      doneCount: grouped[\"Done\"].length,\n      inProgressCount: grouped[\"In Progress\"].length,\n      blockedCount: grouped[\"Blocked / Risk Watch\"].length,\n      backlogCount: grouped[\"Backlog\"].length,\n      done: grouped[\"Done\"],\n      inProgress: grouped[\"In Progress\"],\n      blocked: grouped[\"Blocked / Risk Watch\"],\n      backlog: grouped[\"Backlog\"]\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        0
+      ],
+      "id": "407ad90c-568d-4bf1-977c-acbcdc1cdaf4",
+      "name": "Group Tasks by Status"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are Mira, an AI project reporting assistant.\n\nCreate a weekly status email for the ABCDE Ltd AI Adoption Project using the Trello task data provided below.\n\nYour output must strictly follow this exact format and section order:\n\nHello Team,\n\nPlease find below the weekly status update for the ABCDE Ltd AI Adoption Project.\n\n1. Overall Status\n[Write 2-3 professional sentences summarizing the week’s project status.]\n\n2. Progress Snapshot\n- Total tasks: X\n- Done: X\n- In Progress: X\n- Blocked: X\n- Backlog: X\n\n3. Completed This Week\n- [List completed tasks]\nIf none, write: No updates this week.\n\n4. In Progress\n- [List in-progress tasks]\nIf none, write: No updates this week.\n\n5. Risks / Blockers\n- [List blocked tasks with one short note on why they matter]\nIf none, write: No updates this week.\n\n6. Upcoming Priorities\n- [List key backlog tasks and near-term priorities]\nIf none, write: No updates this week.\n\n7. Recommended PM Attention\n- [Write 2 short project manager action points]\nIf none, write: No immediate PM action required.\n\nRegards,\nMira\nAI Kanban Summariser Agent\n\nRules:\n- Keep tone professional, concise, and clear.\n- Do not add extra headings.\n- Do not add markdown symbols like ** or ###.\n- Do not include JSON in the response.\n- Use only the data provided.\n- If task owners are missing, do not mention owners.\n- If descriptions are missing, summarize based on task names only.\n\nHere is the Trello weekly task data:\n{{ JSON.stringify($json, null, 2) }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        768,
+        0
+      ],
+      "id": "336b6170-711f-46e5-b8d1-9c814652e5ba",
+      "name": "Generate Weekly Status Report"
+    },
+    {
+        "parameters": {
+            "sendTo": "your-email@example.com",
+            "subject": "=Weekly Status Report : ABCDE Ltd AI Adoption Project – {{$now.format(\"dd LLL yyyy\")}}",
+            "message": "={{ $json.htmlBody }}",
+            "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+            1296,
+            0
+        ],
+        "id": "36651ca0-9f5f-4766-a4eb-2f65d571b149",
+        "name": "Send Weekly Status Email",
+        "webhookId": "YOUR_WEBHOOK_ID",
+        "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output || \"\";\n\n// Escape HTML special characters first\nfunction escapeHtml(text) {\n  return String(text)\n    .replace(/&/g, \"&amp;\")\n    .replace(/</g, \"&lt;\")\n    .replace(/>/g, \"&gt;\");\n}\n\nconst lines = raw.split(\"\\n\").map(line => line.trim()).filter(line => line !== \"\");\n\nlet html = `\n<html>\n  <body style=\"font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #222;\">\n`;\n\n// Track whether we're inside a list\nlet inList = false;\n\nfor (const line of lines) {\n  const safeLine = escapeHtml(line);\n\n  // Greeting\n  if (safeLine === \"Hello Team,\") {\n    if (inList) {\n      html += `</ul>`;\n      inList = false;\n    }\n    html += `<p>Hello Team,</p>`;\n    continue;\n  }\n\n  // Closing lines\n  if (\n    safeLine === \"Regards,\" ||\n    safeLine === \"Mira\" ||\n    safeLine === \"AI Kanban Summariser Agent\"\n  ) {\n    if (inList) {\n      html += `</ul>`;\n      inList = false;\n    }\n    html += `<p>${safeLine}</p>`;\n    continue;\n  }\n\n  // Section headings like \"1. Overall Status\"\n  if (/^\\d+\\.\\s/.test(safeLine)) {\n    if (inList) {\n      html += `</ul>`;\n      inList = false;\n    }\n    html += `<p style=\"margin-top: 16px; margin-bottom: 6px;\"><strong>${safeLine}</strong></p>`;\n    continue;\n  }\n\n  // Bullet points\n  if (safeLine.startsWith(\"- \")) {\n    if (!inList) {\n      html += `<ul style=\"margin-top: 4px; margin-bottom: 12px; padding-left: 20px;\">`;\n      inList = true;\n    }\n    html += `<li>${safeLine.substring(2)}</li>`;\n    continue;\n  }\n\n  // Normal paragraphs\n  if (inList) {\n    html += `</ul>`;\n    inList = false;\n  }\n\n  html += `<p>${safeLine}</p>`;\n}\n\nif (inList) {\n  html += `</ul>`;\n}\n\nhtml += `\n  </body>\n</html>\n`;\n\nreturn [\n  {\n    json: {\n      htmlBody: html\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "a1db481e-5778-492a-83ff-d69516aa7704",
+      "name": "Format Status Report as HTML"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Weekly Status Report",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Trello Board Lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Trello Board Lists": {
+      "main": [
+        [
+          {
+            "node": "Fetch Trello Cards from Lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Trello Cards from Lists": {
+      "main": [
+        [
+          {
+            "node": "Transform Trello Cards → Task Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform Trello Cards → Task Data": {
+      "main": [
+        [
+          {
+            "node": "Group Tasks by Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Group Tasks by Status": {
+      "main": [
+        [
+          {
+            "node": "Generate Weekly Status Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Weekly Status Report": {
+      "main": [
+        [
+          {
+            "node": "Format Status Report as HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Weekly Status Email": {
+      "main": [
+        []
+      ]
+    },
+    "Format Status Report as HTML": {
+      "main": [
+        [
+          {
+            "node": "Send Weekly Status Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "60f9eb82-49bb-45d4-9518-52406eac1183",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "09a924f28c0b1deb0e79a9d1ffd84658c30c25234c9a5c4adf94825c781efc0a"
+  },
+  "id": "mNoUJIV4Jt7JuhhU",
+  "tags": []
+}
