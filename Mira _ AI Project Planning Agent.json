@@ -1,0 +1,828 @@
+{
+  "name": "Mira : AI Project Planning Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        -112
+      ],
+      "id": "52c43e29-d3e0-446c-9713-bbabda89673c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+        "parameters": {
+            "model": {
+                "__rl": true,
+                "mode": "list",
+                "value": "gpt-4.1-mini"
+            },
+            "builtInTools": {},
+            "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+            -208,
+            32
+        ],
+        "id": "ea791d63-7998-4407-b94a-ac9b2265010a",
+        "name": "OpenAI Chat Model",
+        "credentials": {}
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyWeek",
+              "hour": 9
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+            "__rl": true,
+            "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+            "mode": "list",
+            "cachedResultName": "Capstone Project 1 : Input Documents",
+            "cachedResultUrl": "YOUR_DRIVE_LINK"
+        },
+        "event": "fileUpdated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        -304
+      ],
+      "id": "40fab8fd-f367-4d14-b3bd-7cd2fe959153",
+      "name": "Monitor Project Input Folder",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "not name contains 'Project Plan'",
+        "returnAll": true,
+        "filter": {
+            "folderId": {
+                "__rl": true,
+                "value": "YOUR_GOOGLE_DRIVE_FOLDER_ID",
+                "mode": "list",
+                "cachedResultName": "Capstone Project 1 : Input Documents",
+                "cachedResultUrl": "YOUR_DRIVE_LINK"
+            },
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2016,
+        -208
+      ],
+      "id": "7d4cefd3-393b-43af-86ab-b7e918f6f087",
+      "name": "Retrieve Input Documents",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -1792,
+        -208
+      ],
+      "id": "80821d47-f39a-4c8c-953c-c5dc8b9b3a0b",
+      "name": "Download Source Document",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2c68c17e-9fba-4e94-a443-42f04a978a55",
+                    "leftValue": "={{ $json.name }}",
+                    "rightValue": ".txt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e6ba96b5-57a6-41aa-8598-03a1fdaf0b32",
+                    "leftValue": "={{ $json.name }}",
+                    "rightValue": ".xlsx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Excel"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "c2947816-4418-4735-80fc-f5be23937e02",
+                    "leftValue": "={{ $json.name }}",
+                    "rightValue": ".docx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Document"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b45f6c3a-3a80-4d51-b138-31b64f86241d",
+                    "leftValue": "={{ $json.name }}",
+                    "rightValue": ".pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1568,
+        -240
+      ],
+      "id": "a5be1b28-38ac-4981-9dfe-943b39394391",
+      "name": "Detect File Type"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1104,
+        -464
+      ],
+      "id": "2d7d67fb-c397-46b6-8c79-662a658eace3",
+      "name": "Extract Text Content"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "includeEmptyCells": false,
+          "rawData": false,
+          "readAsString": false
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        -304
+      ],
+      "id": "890acff5-458d-4ae6-aeea-ca0c00ff41b8",
+      "name": "Extract Excel Data"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {
+          "joinPages": true
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        80
+      ],
+      "id": "aa1f6274-4db7-4062-a0aa-9142c6604648",
+      "name": "Extract PDF Content"
+    },
+    {
+      "parameters": {
+        "targetFormat": "pdf",
+        "options": {},
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-converthub.converthub",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        -144
+      ],
+      "id": "6a5ea94d-b62e-4df8-95a5-ec7b33467981",
+      "name": "Convert DOCX to PDF",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1120,
+        -112
+      ],
+      "id": "742cbc6b-b4be-4082-86b7-5b5e2f2468a7",
+      "name": "Extract Converted DOC Content"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "include": "specifiedFields",
+        "fieldsToInclude": "__EMPTY, __EMPTY_1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -272
+      ],
+      "id": "a3262e38-cfa1-43cf-845c-4e335b5c0937",
+      "name": "Aggregate Excel Text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5393bcb1-d7da-4847-a103-aca376326f6f",
+              "name": "data",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -928,
+        -96
+      ],
+      "id": "2425d8a3-a584-4ed3-81a0-8da334759b5f",
+      "name": "Normalize Extracted Text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5393bcb1-d7da-4847-a103-aca376326f6f",
+              "name": "data",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -928,
+        80
+      ],
+      "id": "4187b919-f443-4cc7-aa26-c7c40849f5e4",
+      "name": "Normalize PDF Content"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -672,
+        -240
+      ],
+      "id": "febb5262-26ff-40b8-b31a-f11866126533",
+      "name": "Combine Extracted Content"
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = $(\"Combine Extracted Content\").all();\nconst combinedData = files.map((file) => file.json.data);\n\nreturn [{ json: { data: combinedData } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        -208
+      ],
+      "id": "ed0fcc35-600f-488f-914c-41bc37c72d40",
+      "name": "Consolidate Text Corpus"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are Mira, an enterprise project planning agent for ABCDE Ltd.\n\nYour job is to read the provided project source material and generate a high-level project plan for the project.\n\nProject context:\n- Project name: AI adoption for ABCDE Ltd.\n- Your output will be converted into a Word document and saved to Google Drive.\n- The document must ALWAYS follow the exact same structure and section order.\n- Be concise, professional, and implementation-oriented.\n- Do not invent facts that are not supported by the input.\n- If information is missing, explicitly write \"TBD\" instead of guessing.\n- Use business language suitable for leadership review.\n\nOutput rules:\n- Return the project plan in VALID JSON only.\n- Do not include markdown fences.\n- Do not include any commentary before or after the JSON.\n- Keep wording clear and polished.\n- Keep bullet points short and action-oriented.\n- Dates should be specific if provided in the source input; otherwise write \"TBD\".\n- Risks, dependencies, and assumptions must be clearly separated.\n- Success metrics must be measurable wherever possible.\n- Return only valid JSON. Do not wrap the JSON inside quotes.\n\nUse exactly this JSON schema and no other format:\n\n{\n  \"document_title\": \"Project Plan – AI adoption for ABCDE Ltd.\",\n  \"document_version\": \"1.0\",\n  \"prepared_by\": \"Mira\",\n  \"prepared_date\": \"\",\n  \"executive_summary\": \"\",\n  \"business_objective\": \"\",\n  \"project_scope\": {\n    \"in_scope\": [],\n    \"out_of_scope\": []\n  },\n  \"key_stakeholders\": [\n    {\n      \"name\": \"\",\n      \"role\": \"\",\n      \"responsibility\": \"\"\n    }\n  ],\n  \"project_phases\": [\n    {\n      \"phase_name\": \"\",\n      \"objective\": \"\",\n      \"key_activities\": [],\n      \"deliverables\": [],\n      \"estimated_duration\": \"\"\n    }\n  ],\n  \"milestones\": [\n    {\n      \"milestone\": \"\",\n      \"target_date\": \"\",\n      \"success_criteria\": \"\"\n    }\n  ],\n  \"dependencies\": [],\n  \"assumptions\": [],\n  \"risks\": [\n    {\n      \"risk\": \"\",\n      \"impact\": \"Low/Medium/High\",\n      \"mitigation\": \"\"\n    }\n  ],\n  \"resource_plan\": {\n    \"team_roles_needed\": [],\n    \"tools_or_platforms_needed\": []\n  },\n  \"governance_and_communication\": {\n    \"meeting_cadence\": \"\",\n    \"status_reporting\": \"\",\n    \"escalation_path\": \"\"\n  },\n  \"success_metrics\": [],\n  \"next_steps\": []\n}\n\nQuality requirements:\n- executive_summary: 1 short paragraph\n- business_objective: 1 short paragraph\n- in_scope and out_of_scope: 3 to 7 bullets each when available\n- project_phases: 4 to 6 phases where possible\n- milestones: 5 to 10 items where possible\n- risks: include at least 3 if supported by the input\n- next_steps: practical and immediate\n\nIf multiple files provide overlapping information, consolidate them into one coherent plan.\nIf files conflict, prefer the most explicit and recent information.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        -208
+      ],
+      "id": "d32ce553-7b6c-4774-880f-ea4a376bbb67",
+      "name": "Project Planning Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = items[0].json.output;\n\n// Parse the JSON string returned by the agent\nconst data = JSON.parse(raw);\n\n// Helper to convert arrays into bullet lists\nfunction bulletList(arr, mapper = (x) => x) {\n  if (!Array.isArray(arr)) return \"\";\n  return arr.map(item => \"• \" + mapper(item)).join(\"\\n\");\n}\n\n// Build formatted fields\nconst formatted = {\n  document_title: data.document_title || \"\",\n  executive_summary: data.executive_summary || \"\",\n  business_objective: data.business_objective || \"\",\n\n  in_scope: bulletList(data.project_scope?.in_scope),\n  out_of_scope: bulletList(data.project_scope?.out_of_scope),\n\n  key_stakeholders: bulletList(\n    data.key_stakeholders,\n    s => `${s.name} — ${s.role}: ${s.responsibility}`\n  ),\n\n  milestones: bulletList(\n    data.milestones,\n    m => `${m.milestone} — ${m.success_criteria}`\n  ),\n\n  dependencies: bulletList(data.dependencies),\n\n  assumptions: bulletList(data.assumptions),\n\n  risks: bulletList(\n    data.risks,\n    r => `${r.risk} (Impact: ${r.impact}) — Mitigation: ${r.mitigation}`\n  ),\n\n  success_metrics: bulletList(data.success_metrics),\n\n  next_steps: bulletList(data.next_steps),\n\n  resource_plan: [\n    data.resource_plan?.team_roles_needed?.length\n      ? \"Team Roles Needed:\\n\" + bulletList(data.resource_plan.team_roles_needed)\n      : \"\",\n    data.resource_plan?.tools_or_platforms_needed?.length\n      ? \"Tools or Platforms Needed:\\n\" + bulletList(data.resource_plan.tools_or_platforms_needed)\n      : \"\"\n  ].filter(Boolean).join(\"\\n\\n\"),\n\n  governance_and_communication: [\n    data.governance_and_communication?.meeting_cadence\n      ? `Meeting Cadence: ${data.governance_and_communication.meeting_cadence}`\n      : \"\",\n    data.governance_and_communication?.status_reporting\n      ? `Status Reporting: ${data.governance_and_communication.status_reporting}`\n      : \"\",\n    data.governance_and_communication?.escalation_path\n      ? `Escalation Path: ${data.governance_and_communication.escalation_path}`\n      : \"\"\n  ].filter(Boolean).join(\"\\n\\n\")\n};\n\nreturn [{ json: formatted }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -112
+      ],
+      "id": "d623d9ed-b0b7-47c3-8d89-6f0e36d48876",
+      "name": "Format Project Plan Data"
+    },
+    {
+        "parameters": {
+            "operation": "get",
+            "documentURL": "YOUR_GOOGLE_DOC_TEMPLATE_URL",
+            "simple": false
+        },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        128,
+        -304
+      ],
+      "id": "d89a66b7-bc59-4cfa-b3ae-38c2f72e7da2",
+      "name": "Retrieve Template Document",
+      "credentials": {}
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        352,
+        -208
+      ],
+      "id": "06758358-3394-4abc-b07b-85ecd150bef8",
+      "name": "Merge Document + AI Output"
+    },
+    {
+      "parameters": {
+        "jsCode": "let docItem = null;\nlet dataItem = null;\n\n// Find doc item and formatted data item\nfor (const item of items) {\n  if (item.json.documentId && item.json.body && item.json.body.content) {\n    docItem = item.json;\n  }\n\n  if (\n    item.json.executive_summary ||\n    item.json.business_objective ||\n    item.json.in_scope ||\n    item.json.out_of_scope ||\n    item.json.key_stakeholders ||\n    item.json.project_phases ||\n    item.json.milestones ||\n    item.json.dependencies ||\n    item.json.assumptions ||\n    item.json.risks ||\n    item.json.resource_plan ||\n    item.json.governance_and_communication ||\n    item.json.success_metrics ||\n    item.json.next_steps\n  ) {\n    dataItem = item.json;\n  }\n}\n\nif (!docItem) {\n  throw new Error(\"Google Docs document structure not found in input.\");\n}\n\nif (!dataItem) {\n  throw new Error(\"Formatted project plan data not found in input.\");\n}\n\nconst documentId = docItem.documentId;\nconst content = docItem.body.content;\nconst docEndIndex = content[content.length - 1]?.endIndex;\n\n// Map headings in the doc to formatted content\nconst replacements = {\n  \"Executive Summary\": dataItem.executive_summary || \"\",\n  \"Business Objective\": dataItem.business_objective || \"\",\n  \"In Scope\": dataItem.in_scope || \"\",\n  \"Out of Scope\": dataItem.out_of_scope || \"\",\n  \"Key Stakeholders\": dataItem.key_stakeholders || \"\",\n  \"Project Phases\": dataItem.project_phases || \"\",\n  \"Milestones\": dataItem.milestones || \"\",\n  \"Dependencies\": dataItem.dependencies || \"\",\n  \"Assumptions\": dataItem.assumptions || \"\",\n  \"Risks\": dataItem.risks || \"\",\n  \"Resource Plan\": dataItem.resource_plan || \"\",\n  \"Governance and Communication\": dataItem.governance_and_communication || \"\",\n  \"Success Metrics\": dataItem.success_metrics || \"\",\n  \"Next Steps\": dataItem.next_steps || \"\"\n};\n\nfunction getParagraphText(element) {\n  if (!element?.paragraph?.elements) return \"\";\n  return element.paragraph.elements\n    .map(e => e.textRun?.content || \"\")\n    .join(\"\")\n    .replace(/\\n/g, \"\")\n    .trim();\n}\n\nfunction isHeading(element) {\n  const style = element?.paragraph?.paragraphStyle?.namedStyleType || \"\";\n  return style.startsWith(\"HEADING\");\n}\n\nconst headings = [];\n\nfor (let i = 0; i < content.length; i++) {\n  const el = content[i];\n  if (el.paragraph && isHeading(el)) {\n    headings.push({\n      text: getParagraphText(el),\n      startIndex: el.startIndex,\n      endIndex: el.endIndex\n    });\n  }\n}\n\nfunction findSectionRange(headingText) {\n  const idx = headings.findIndex(h => h.text === headingText);\n  if (idx === -1) return null;\n\n  const current = headings[idx];\n  const next = headings[idx + 1];\n\n  return {\n    heading: headingText,\n    startIndex: current.endIndex,\n    endIndex: next ? next.startIndex : docEndIndex - 1\n  };\n}\n\nfunction normalizeText(text) {\n  return String(text || \"\")\n    .replace(/\\r\\n/g, \"\\n\")\n    .replace(/[ \\t]+\\n/g, \"\\n\")\n    .replace(/\\n{3,}/g, \"\\n\\n\")\n    .trim();\n}\n\n// Remove visible bullet symbol before insertion.\n// We'll create real bullets later with createParagraphBullets.\nfunction stripBulletMarkers(text) {\n  return text\n    .split(\"\\n\")\n    .map(line => line.startsWith(\"• \") ? line.slice(2) : line)\n    .join(\"\\n\");\n}\n\n// Find ranges of consecutive bullet paragraphs after stripping markers\nfunction getBulletParagraphGroups(startIndex, originalText) {\n  const lines = originalText.split(\"\\n\");\n  const groups = [];\n\n  let cursor = startIndex;\n  let groupStart = null;\n  let groupEnd = null;\n\n  for (const line of lines) {\n    const isBullet = line.startsWith(\"• \");\n    const cleanedLine = isBullet ? line.slice(2) : line;\n    const lineLengthAfterInsert = cleanedLine.length + 1; // + newline\n\n    if (isBullet) {\n      if (groupStart === null) groupStart = cursor;\n      groupEnd = cursor + lineLengthAfterInsert;\n    } else {\n      if (groupStart !== null) {\n        groups.push({ startIndex: groupStart, endIndex: groupEnd });\n        groupStart = null;\n        groupEnd = null;\n      }\n    }\n\n    cursor += lineLengthAfterInsert;\n  }\n\n  if (groupStart !== null) {\n    groups.push({ startIndex: groupStart, endIndex: groupEnd });\n  }\n\n  return groups;\n}\n\nconst sections = Object.entries(replacements)\n  .map(([heading, text]) => {\n    const range = findSectionRange(heading);\n    if (!range) return null;\n\n    const normalizedOriginal = normalizeText(text);\n    const cleanedText = stripBulletMarkers(normalizedOriginal);\n\n    return {\n      heading,\n      originalText: normalizedOriginal,\n      text: cleanedText,\n      startIndex: range.startIndex,\n      endIndex: range.endIndex\n    };\n  })\n  .filter(Boolean)\n  .sort((a, b) => b.startIndex - a.startIndex); // bottom-up\n\nconst requests = [];\n\nfor (const section of sections) {\n  if (\n    typeof section.startIndex === \"number\" &&\n    typeof section.endIndex === \"number\" &&\n    section.endIndex > section.startIndex\n  ) {\n    requests.push({\n      deleteContentRange: {\n        range: {\n          startIndex: section.startIndex,\n          endIndex: section.endIndex\n        }\n      }\n    });\n  }\n\n  if (!section.text) continue;\n\n  const insertedText = section.text + \"\\n\";\n  const insertedEndIndex = section.startIndex + insertedText.length;\n\n  requests.push({\n    insertText: {\n      location: {\n        index: section.startIndex\n      },\n      text: insertedText\n    }\n  });\n\n  // Reset paragraph style completely to normal body text\n  requests.push({\n    updateParagraphStyle: {\n      range: {\n        startIndex: section.startIndex,\n        endIndex: insertedEndIndex\n      },\n      paragraphStyle: {\n        namedStyleType: \"NORMAL_TEXT\",\n        lineSpacing: 115,\n        spaceAbove: { magnitude: 0, unit: \"PT\" },\n        spaceBelow: { magnitude: 0, unit: \"PT\" }\n      },\n      fields: \"namedStyleType,lineSpacing,spaceAbove,spaceBelow\"\n    }\n  });\n\n  // Reset text style consistently\n  requests.push({\n    updateTextStyle: {\n      range: {\n        startIndex: section.startIndex,\n        endIndex: insertedEndIndex\n      },\n      textStyle: {\n        weightedFontFamily: {\n          fontFamily: \"Arial\"\n        },\n        fontSize: {\n          magnitude: 11,\n          unit: \"PT\"\n        },\n        bold: false,\n        italic: false,\n        underline: false,\n        strikethrough: false\n      },\n      fields: \"weightedFontFamily,fontSize,bold,italic,underline,strikethrough\"\n    }\n  });\n\n  // Create real bullets for consecutive bullet paragraphs\n  const bulletGroups = getBulletParagraphGroups(section.startIndex, section.originalText);\n\n  for (const group of bulletGroups) {\n    requests.push({\n      createParagraphBullets: {\n        range: {\n          startIndex: group.startIndex,\n          endIndex: group.endIndex\n        },\n        bulletPreset: \"BULLET_DISC_CIRCLE_SQUARE\"\n      }\n    });\n  }\n}\n\nreturn [\n  {\n    json: {\n      documentId,\n      requests,\n      updatedSections: sections.map(s => s.heading),\n      foundHeadings: headings.map(h => h.text)\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -208
+      ],
+      "id": "1f2ec2b2-540c-47fd-942d-2c848e38d171",
+      "name": "Build Google Docs Update Requests"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docs.googleapis.com/v1/documents/{{$json.documentId}}:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDocsOAuth2Api",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "requests",
+              "value": "={{$json.requests}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        800,
+        -208
+      ],
+      "id": "7a3ae1b1-cad3-4643-abc3-d1d8e8ec9947",
+      "name": "Update Project Plan Document",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "content": "# Trigger Workflow and download input files",
+        "height": 800,
+        "width": 752,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2384,
+        -560
+      ],
+      "typeVersion": 1,
+      "id": "a4c86d32-9bf3-4fa6-89f6-de8c2d2bc2d7",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Detect File Type, Extract Content  & Merge Extracted Content",
+        "height": 800,
+        "width": 1312,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1600,
+        -560
+      ],
+      "typeVersion": 1,
+      "id": "e4243e15-ab38-46e2-b00a-9a8887be4e12",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Create Project Plan using AI",
+        "height": 800,
+        "width": 288,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        -560
+      ],
+      "typeVersion": 1,
+      "id": "d3dac6a6-17c0-4f0a-9ba3-07186eaa9de7",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# Project Plan Document Generation and Template Integration",
+        "height": 800,
+        "width": 864,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        64,
+        -560
+      ],
+      "typeVersion": 1,
+      "id": "9aaab40a-9110-49b2-a79d-194d11c757d0",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Input Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Project Planning Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monitor Project Input Folder": {
+      "main": [
+        [
+          {
+            "node": "Retrieve Input Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Input Documents": {
+      "main": [
+        [
+          {
+            "node": "Download Source Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Source Document": {
+      "main": [
+        [
+          {
+            "node": "Detect File Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect File Type": {
+      "main": [
+        [
+          {
+            "node": "Extract Text Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Excel Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert DOCX to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract PDF Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text Content": {
+      "main": [
+        [
+          {
+            "node": "Combine Extracted Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Excel Data": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Excel Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Content": {
+      "main": [
+        [
+          {
+            "node": "Normalize PDF Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert DOCX to PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract Converted DOC Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Converted DOC Content": {
+      "main": [
+        [
+          {
+            "node": "Normalize Extracted Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Excel Text": {
+      "main": [
+        [
+          {
+            "node": "Combine Extracted Content",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Normalize Extracted Text": {
+      "main": [
+        [
+          {
+            "node": "Combine Extracted Content",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Normalize PDF Content": {
+      "main": [
+        [
+          {
+            "node": "Combine Extracted Content",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Combine Extracted Content": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Text Corpus",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Text Corpus": {
+      "main": [
+        [
+          {
+            "node": "Project Planning Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Project Planning Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Project Plan Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Retrieve Template Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Project Plan Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Document + AI Output",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Retrieve Template Document": {
+      "main": [
+        [
+          {
+            "node": "Merge Document + AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Document + AI Output": {
+      "main": [
+        [
+          {
+            "node": "Build Google Docs Update Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Google Docs Update Requests": {
+      "main": [
+        [
+          {
+            "node": "Update Project Plan Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d76bfc67-2064-42d4-bb53-0a3184c8e36b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "09a924f28c0b1deb0e79a9d1ffd84658c30c25234c9a5c4adf94825c781efc0a"
+  },
+  "id": "flzsAXkYadcsbnbJ",
+  "tags": []
+}
